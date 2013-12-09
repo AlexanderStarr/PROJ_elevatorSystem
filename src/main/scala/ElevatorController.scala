@@ -7,41 +7,55 @@ object ElevatorController extends Actor {
 	var currentDirection = new PriorityQueue[Int]().reverse
 	var oppositeDirection = new PriorityQueue[Int]()
 	var futureDirection = new PriorityQueue[Int]().reverse
+	var maintenance = false
+	var alarm = false
 
 	def processRequest(direction:String,floor:Int) {
-		if(direction == "up") {
-			if(Elevator.direction == "up" && Elevator.location < floor) {
+		if(currentDirection.size == 0 && oppositeDirection.size == 0 
+		   && futureDirection.size != 0) {
+		     currentDirection = futureDirection
+		     futureDirection.clear()	
+		}
+		if(currentDirection.size == 0 && oppositeDirection.size == 0 
+		  && futureDirection.size == 0) {
+         	if(Elevator.direction != Elevator.directionToFloor(floor)) {
+         		changeQueues()
+         		currentDirection.enqueue(floor)
+         	} else currentDirection.enqueue(floor)
+		} 
+		if(direction == "Up") {
+			if(Elevator.direction == "Up" && Elevator.location <= floor && (currentDirection.count(x => x == floor) != 0)) {
 				currentDirection.enqueue(floor)
-			} else if(Elevator.direction == "down") {
+			} else if(Elevator.direction == "Down" && oppositeDirection.count(x => x == floor) != 0) {
 				oppositeDirection.enqueue(floor)
 			} else {
-				futureDirection.enqueue(floor)
+        if(futureDirection.count(x => x == floor) != 0) {				
+				  futureDirection.enqueue(floor)
+        }
 			}
 		}			
-		if (direction == "down") {
-			if (Elevator.direction == "down" && Elevator.location > floor) {
+		if (direction == "Down") {
+			if (Elevator.direction == "Down" && Elevator.location >= floor && (currentDirection.count(x => x == floor) != 0)) {
 				currentDirection.enqueue(floor)
-			} else if(Elevator.direction == "up") {
+			} else if(Elevator.direction == "Up" && oppositeDirection.count(x => x == floor) != 0) {
 				oppositeDirection.enqueue(floor)
 			} else {
-				futureDirection.enqueue(floor)
+				if (futureDirection.count(x => x == floor) != 0) {	
+				  futureDirection.enqueue(floor)
+				}
 			}			
 		}
 	}
-	
-	def moveElevator() {
-		// should switch the queues
-		if((Elevator.direction == "up" && Elevator.location == 3) ||
-		(Elevator.direction == "down" && Elevator.location == 1)) {
-			// We each queue "moves up" and gets reversed.  The futureDirection queue gets reversed AND cleared.
-			currentDirection = oppositeDirection.reverse
-			oppositeDirection = futureDirection.reverse
+	def changeQueues() {
+	     // We need each queue "moves up" and gets reversed.  The futureDirection queue gets reversed AND cleared.
+ 	    currentDirection = oppositeDirection.reverse		
+ 	    oppositeDirection = futureDirection.reverse
 			futureDirection = futureDirection.reverse
 			futureDirection.clear
-    }
-  }
+	}
 
 	def act() {
+		println("ElevatorController now acting!")
 		while(true) {
 			receive {
 				case (direction: String, floor: Int) => {
@@ -49,47 +63,51 @@ object ElevatorController extends Actor {
 					if statement to make sure that no requests are added
 					unless Elevator is functioning normally
 					*/
-					if(!Elevator.maintenance == true && !Elevator.alarm == true) { 
+					if(!maintenance == true && !alarm == true) { 
             processRequest(direction, floor)
+            println("Current direction queue = " + currentDirection.toString)
+						println("Opposite direction queue = " + oppositeDirection.toString)
+						println("Future direction queue = " + futureDirection.toString)
+						println(Elevator.direction)
 					}
+				}
+				case "Elevator Ready" => {
+		      if((Elevator.direction == "Up" && Elevator.location == 3) ||
+		        (Elevator.direction == "Down" && Elevator.location == 1)) {		
+		   	     changeQueues()      
+		      }
+		       if (currentDirection.size != 0) {
+					    Elevator ! currentDirection.dequeue                								
+           }
 				}
 				case "stopped" => {
-            Elevator ! "stopped"	
+            Elevator ! "stop"	
 				}
 				case "Maintenance On" => {
-        /*
-        Also wasn't sure whether ElevatorController or Elevator should open
-        the doors to let maintenance in.
-        */
-					if(Elevator.location != 1) {
-					  Motor.down()
-					}        
-					Elevator ! "Maintenance On"
+					  futureDirection.enqueue(1)
+					  maintenance = true					    
 				}
 				case "Maintenance Off" => {
-					if(Elevator.location != 1) {
-					  Motor.down()
-					} else {
-						Elevator ! "Maintenance Off" 
-					}
+					  maintenance = false
+					  currentDirection.enqueue(1)
 				}
 				case "Alarm On" => {
 					currentDirection.clear
 					oppositeDirection.clear
 					futureDirection.clear
-					Elevator ! "Alarm On"
+					processRequest(Elevator.direction,Elevator.nearestFloor())
+					alarm = true
 				}
 				case "Alarm Off" => {
-					if(Elevator.location != 1) {
-					  Motor.down()
-					} else {
-						/*
-						  Can change, assumed that Elevator would have to be sent Alarm and Maintenance
-						  information so it can open/close doors and turn on/off elevator lights
-						*/
-						Elevator ! "Alarm Off" 
+					alarm = false
+					if(Elevator.direction == "Up" && Elevator.location > 1) {
+					  changeQueues()
+					  currentDirection.enqueue(1)
 					}
-				}
+					if (Elevator.direction == "Down") {
+						currentDirection.enqueue(1)
+					}
+				} 
 			}
 		}
 	}

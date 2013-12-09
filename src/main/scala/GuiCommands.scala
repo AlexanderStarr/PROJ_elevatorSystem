@@ -4,37 +4,37 @@ object guiOutput {
 
 	def Floor1Up()
 	{
-		//Place your code here for when the up button is pressed on floor 1.
+		//Place your code here for when the Up button is pressed on floor 1.
 		println("Floor 1 Up Button Pressed")
-		ElevatorController ! ("up",1)		
+		ElevatorController ! ("Up",1)		
 	}
 	
 	def Floor2Up()
 	{
-		//Place your code here for when the up button is pressed on floor 2.
+		//Place your code here for when the Up button is pressed on floor 2.
 		println("Floor 2 Up Button Pressed")
-		ElevatorController ! ("up",2)
+		ElevatorController ! ("Up",2)
 	}
 
 	def Floor2Down()
 	{
-		//Place your code here for when the down button is pressed on floor2.
+		//Place your code here for when the Down button is pressed on floor2.
 		println("Floor 2 Down Button Pressed")
-		ElevatorController ! ("down",2)		
+		ElevatorController ! ("Down",2)		
 	}
 
 	def Floor3Down()
 	{
-		//Place your code here for when the down button is pressed on floor3.
+		//Place your code here for when the Down button is pressed on floor3.
 		println("Floor 3 Down Button Pressed")
-		ElevatorController ! ("down",3)
+		ElevatorController ! ("Down",3)
 	}
 
 	def elevFloor1()
 	{
 		//Place your code here for when the 1 button is pressed in the elevator.
 		println("Elevator Button 1 Pressed")
-		ElevatorController ! ("down",1)
+		ElevatorController ! ("Down",1)
 	}
 
 	def elevFloor2()
@@ -42,9 +42,9 @@ object guiOutput {
 		//Place your code here for when the 2 button is pressed in the elevator
 		println("Elevator Button 2 Pressed")
 		if(Elevator.location == 3) {
-		  ElevatorController ! ("down",2)
+		  ElevatorController ! ("Down",2)
 		} else { 
-			ElevatorController ! ("up",2)
+			ElevatorController ! ("Up",2)
 		}
 	}
 
@@ -52,7 +52,7 @@ object guiOutput {
 	{
 		//Place your code here for when the 3 button is pressed in the elevator
 		println("Elevator Button 3 Pressed")
-		ElevatorController ! ("up",3)
+		ElevatorController ! ("Up",3)
 	}
 
 	def elevStop()

@@ -23,6 +23,8 @@ object GUI extends SimpleSwingApplication {
     guiGlobals.motor.start()
     guiGlobals.guiController.start()
     guiGlobals.mainMessenger.start()
+    Elevator.start()
+		ElevatorController.start()
 	 // println(DateTime.now)
 	 def ManualController = new Frame{
 	  title = "Manual Controls"
